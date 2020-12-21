@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
+import '../../controllers/usersController.dart';
 import '../home.dart';
 
 class EmailSignUp extends StatefulWidget {
@@ -10,14 +11,19 @@ class EmailSignUp extends StatefulWidget {
 }
 
 class _EmailSignUpState extends State<EmailSignUp> {
+
   bool isLoading = false;
   final _formKey = GlobalKey<FormState>();
+  String error = "";
+
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   DatabaseReference dbRef = FirebaseDatabase.instance.reference().child("Users");
   TextEditingController emailController = TextEditingController();
   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  TextEditingController ageController = TextEditingController();
+  // TextEditingController ageController = TextEditingController();
+
+  final UserController _auth = UserController(); 
 
   @override 
   Widget build(BuildContext context) {
@@ -32,58 +38,108 @@ class _EmailSignUpState extends State<EmailSignUp> {
               child: TextFormField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: "Enter User Name",
+                  labelText: "Enter User's Name",
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
-                  ),
+                  )
                 ),
-                // The validator receives the text that the user has entered
+                // The validator receives the text the user has entered
                 validator: (value) {
                   if (value.isEmpty) {
-                    return "Enter User Name";
-                  } else if (!value.contains('@')) {
-                    return "Please enter a valid email address";
+                    return "Name Required";
                   }
                   return null;
-                },
-              ),
+                }
+              )
             ),
             Padding(
               padding: EdgeInsets.all(20.0),
               child: TextFormField(
-                controller: ageController,
+                controller: emailController,
                 decoration: InputDecoration(
-                  labelText: "Enter Age",
+                  labelText: "Enter Email",
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
+                    borderRadius: BorderRadius.circular(10.0)
+                  )
+                ),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return "Enter an Email Address";
+                  } else if (!value.contains('@')) {
+                    return "Email Required";
+                  }
+                  return null;
+                }
+              )
+            ),
+            // Padding(
+            //   padding: EdgeInsets.all(20.0),
+            //   child: TextFormField(
+            //     controller: ageController,
+            //     decoration: InputDecoration(
+            //       labelText: "Enter Age",
+            //       enabledBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(10.0)
+            //       )
+            //     ),
+            //     validator: (value) {
+            //       if (value.isEmpty) {
+            //         return "Enter Age";
+            //       }
+            //       return null;
+            //     }
+            //   )
+            // ),
+            Padding(
+              padding: EdgeInsets.all(20.0),
+              child: TextFormField(
+                obscureText: true,
+                controller: passwordController,
+                decoration: InputDecoration(
+                  labelText: "Enter Password",
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0)
+                  )
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
                     return "Enter Password";
                   } else if (value.length < 6) {
-                    return "Password must be atleast 6 characters!";
+                    return "Password must be atleast 6 characters";
                   }
                   return null;
-                },
-              ),
+                }
+              )
             ),
             Padding(
               padding: EdgeInsets.all(20.0),
               child: isLoading ? CircularProgressIndicator() : RaisedButton(
                 color: Colors.lightBlue,
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState.validate()) {
                     setState(() {
                       isLoading = true;
                     });
-                    registerToFb();
+                    dynamic result = await _auth.registerWithEmailAndPassword(emailController.text.toString(), passwordController.text.toString());
+                    if (result == null) {
+                      setState(() {
+                        isLoading = false;
+                        error = "Please supply a valid email and password.";
+                      });
+                    } else {
+                      Navigator.of(context).pop();
+                    }
                   }
                 },
-                child: Text("Submit"),
-              )
+                child: Text("Submit")
+              ),
+            ),
+            SizedBox(height: 12.0),
+            Text(
+              error,
+              style: TextStyle(color: Colors.red, fontSize: 14.0)
             )
-          ])
+          ],)
         )
       )
     );
@@ -95,7 +151,7 @@ class _EmailSignUpState extends State<EmailSignUp> {
       .then((result) {
         dbRef.child(result.user.uid).set({
           "email": emailController.text,
-          "age": ageController.text,
+          // "age": ageController.text,
           "name": nameController.text,
         }).then((res) {
           isLoading = false;
@@ -122,6 +178,7 @@ class _EmailSignUpState extends State<EmailSignUp> {
             );
           }
         );
+        isLoading = false;
       });
   }
 
@@ -131,6 +188,6 @@ class _EmailSignUpState extends State<EmailSignUp> {
     nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
-    ageController.dispose();
+    // ageController.dispose();
   }
 }
