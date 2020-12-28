@@ -5,7 +5,6 @@ import '../../controllers/usersController.dart';
 
 import 'email_login.dart';
 import 'email_signup.dart';
-import '../home.dart';
 
 class SignUp extends StatelessWidget {
 

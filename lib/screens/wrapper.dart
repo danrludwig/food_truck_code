@@ -10,9 +10,6 @@ class Wrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     
     final user = Provider.of<AppUser>(context);
-    // print("\n\n\n\n\n\n\n");
-    print(user);
-    // print("\n\n\n\n\n\n\n");
 
     // return etiher Home or Authenticate widget
     if (user == null) {
